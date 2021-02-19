@@ -9,5 +9,10 @@
     <string name="title_activity_maps">Map</string>
     <string name="volver">Volver</string>
 
+    <string name="normal">Normal</string>
+    <string name="hibrido">Hibrido</string>
+    <string name="satelital">Satelital</string>
+    <string name="terreno">De terreno</string>
+    <string name="ninguno">Ninguno</string>
 
 </resources>

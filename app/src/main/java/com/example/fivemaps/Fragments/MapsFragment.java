@@ -1,6 +1,7 @@
 package com.example.fivemaps.Fragments;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -37,6 +38,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
         return v;
     }
 
@@ -50,8 +52,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
             return;
         }
         mMap.setMyLocationEnabled(true);
-    }
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
+        mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+    }
 }
 
 
