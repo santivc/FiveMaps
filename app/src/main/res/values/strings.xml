@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">FiveMaps</string>
+    <string name="explorar">Explorar</string>
+    <string name="ir">Ir</string>
+    <string name="ubicación">Ubicación</string>
+    <string name="origen">Origen</string>
+    <string name="destino">Destino</string>
+    <string name="localizar">Localizar</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="volver">Volver</string>
+
+
+</resources>
