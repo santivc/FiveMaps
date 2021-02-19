@@ -15,15 +15,16 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.fivemaps.Fragments.MapsFragment;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.material.appbar.MaterialToolbar;
 
-public class MapaActivity extends AppCompatActivity implements View.OnClickListener {
+public class MapaActivity extends AppCompatActivity implements View.OnClickListener, OnMapReadyCallback {
 
     private Toolbar toolbar;
     private final int REQUEST_CODE_ASK_PERMISSION = 111;
-    private MapsFragment mapsFragment;
+    private GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +33,11 @@ public class MapaActivity extends AppCompatActivity implements View.OnClickListe
 
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setNavigationOnClickListener(this::onClick);
+        toolbar.setNavigationOnClickListener(this);
 
-        Fragment fragment = new MapsFragment();
-        getSupportFragmentManager().beginTransaction().replace(R.id.containerMap, fragment).commit();
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
         solicitarPermisos();
     }
 
@@ -44,43 +46,52 @@ public class MapaActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreateOptionsMenu(menu);
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_toolbar, menu);
-
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        Intent intent = new Intent();
         switch (item.getItemId()) {
             case R.id.ninguno:
-                //intent.putExtra("TIPO", GoogleMap.MAP_TYPE_NONE);
-                //startActivity(intent);
+                mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
                 break;
             case R.id.normal:
-                //intent.putExtra("TIPO", GoogleMap.MAP_TYPE_NORMAL);
-                //startActivity(intent);
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                 break;
             case R.id.satelital:
-                //intent.putExtra("TIPO", GoogleMap.MAP_TYPE_SATELLITE);
-                //startActivity(intent);
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 break;
             case R.id.terreno:
-                //intent.putExtra("TIPO", GoogleMap.MAP_TYPE_TERRAIN);
-                //startActivity(intent);
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
                 break;
             case R.id.hibrido:
-                //intent.putExtra("TIPO", GoogleMap.MAP_TYPE_HYBRID);
-                //startActivity(intent);
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onClick(View v) {
+        onBackPressed();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        // Add a marker in Sydney and move the camera
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+    }
+
+
     private void solicitarPermisos() {
         int permissionAccessCoarseLocation = ActivityCompat.checkSelfPermission(MapaActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
         int permissionAccessFineLocation = ActivityCompat.checkSelfPermission(MapaActivity.this, Manifest.permission.ACCESS_FINE_LOCATION);
-
         if (permissionAccessCoarseLocation != PackageManager.PERMISSION_GRANTED || permissionAccessFineLocation != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSION);
@@ -88,8 +99,4 @@ public class MapaActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        onBackPressed();
-    }
 }
