@@ -23,7 +23,7 @@
             android:required="false" />
 
         <activity
-            android:name=".MapaActivity"
+            android:name=".MapsActivity"
             android:theme="@style/Theme.FiveMaps.NoActionBar" />
 
         <activity

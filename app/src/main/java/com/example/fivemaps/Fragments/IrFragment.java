@@ -1,6 +1,5 @@
 package com.example.fivemaps.Fragments;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.fivemaps.MapaActivity;
+import com.example.fivemaps.MapsActivity;
 import com.example.fivemaps.R;
 
 public class IrFragment extends Fragment implements View.OnClickListener {
@@ -47,7 +46,7 @@ public class IrFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (!etOrigen.getText().toString().equals("") && !etDestino.getText().toString().equals("")) {
-            Intent intent = new Intent(getContext(), MapaActivity.class);
+            Intent intent = new Intent(getContext(), MapsActivity.class);
             intent.putExtra("ORIGEN", etOrigen.getText().toString());
             intent.putExtra("DESTINO", etDestino.getText().toString());
             startActivity(intent);
