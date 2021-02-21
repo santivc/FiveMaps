@@ -15,4 +15,8 @@
     <string name="terreno">De terreno</string>
     <string name="ninguno">Ninguno</string>
 
+    <string name="stop">Stop</string>
+    <string name="play">Play</string>
+    <string name="information">Información</string>
+
 </resources>
