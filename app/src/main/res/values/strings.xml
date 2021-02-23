@@ -2,6 +2,8 @@
     <string name="app_name">FiveMaps</string>
     <string name="explorar">Explorar</string>
     <string name="ir">Ir</string>
+    <string name="visitados">Visitados</string>
+
     <string name="ubicación">Ubicación</string>
     <string name="origen">Origen</string>
     <string name="destino">Destino</string>
@@ -18,5 +20,6 @@
     <string name="stop">Stop</string>
     <string name="play">Play</string>
     <string name="information">Información</string>
+
 
 </resources>

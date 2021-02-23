@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 
 import com.example.fivemaps.Fragments.ExplorarFragment;
 import com.example.fivemaps.Fragments.IrFragment;
+import com.example.fivemaps.Fragments.LugaresFragment;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     private int numTabs;
@@ -24,6 +25,8 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
                 return new ExplorarFragment();
             case 1:
                 return new IrFragment();
+            case 2:
+                return new LugaresFragment();
         }
         return null;
     }

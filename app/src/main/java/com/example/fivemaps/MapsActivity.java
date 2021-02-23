@@ -6,17 +6,19 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
-import android.media.AudioManager;
+
 import android.media.MediaPlayer;
-import android.net.Uri;
+
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,9 +33,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 public class MapsActivity extends AppCompatActivity implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
@@ -117,19 +123,19 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setTrafficEnabled(true);
 
-        if (ubicacion != null) setUbicacion(googleMap);
-        else setRuta(googleMap);
+        if (ubicacion != null)
+            setUbicacion(googleMap);
+        else
+            setRuta(googleMap);
 
     }
 
     private void setRuta(GoogleMap googleMap) {
         mMap = googleMap;
-        List<Address> addresses1;
-        List<Address> addresses2;
         try {
-            addresses1 = geocoder.getFromLocationName(origen, 1);
+            List<Address> addresses1 = geocoder.getFromLocationName(origen, 1);
             //addresses.add((Address) geocoder.getFromLocationName(origen, 1));
-            addresses2 = geocoder.getFromLocationName(destino, 1);
+            List<Address> addresses2 = geocoder.getFromLocationName(destino, 1);
 
             if (addresses1.size() > 0 && addresses2.size() > 0) {
                 Address direccionOrigen = addresses1.get(0);
@@ -138,11 +144,8 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
                 LatLng coordOrigen = new LatLng(direccionOrigen.getLatitude(), direccionOrigen.getLongitude());
                 LatLng coordDestino = new LatLng(direccionDestino.getLatitude(), direccionDestino.getLongitude());
 
-                List<LatLng> latLngs = new ArrayList<>();
-
                 mMap.addMarker(new MarkerOptions().position(coordOrigen).title(direccionOrigen.getLocality()));
                 mMap.addMarker(new MarkerOptions().position(coordDestino).title(direccionDestino.getLocality()));
-
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -156,6 +159,8 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
             if (addresses.size() > 0) {
                 address = addresses.get(0);
                 LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+
+                guardarUbicacion(address);
 
                 markerUbicacion = googleMap.addMarker(new MarkerOptions()
                         .position(latLng));
@@ -172,6 +177,20 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void guardarUbicacion(Address address) {
+        SharedPreferences prefs = getSharedPreferences("guardados", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        if (address.getLocality() == null) {
+            //ubicaciones.add(address.getCountryName());
+            editor.putString(address.getLocality(), address.getCountryName());
+        } else {
+            //ubicaciones.add(address.getLocality());
+            editor.putString(address.getLocality(), address.getLocality());
+        }
+        editor.apply();
     }
 
     @Override
