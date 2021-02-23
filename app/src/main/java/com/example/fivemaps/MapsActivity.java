@@ -32,6 +32,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MapsActivity extends AppCompatActivity implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -40,7 +41,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
     private final int REQUEST_CODE_ASK_PERMISSION = 111;
     private GoogleMap mMap;
     private Geocoder geocoder;
-    private String ubicacion;
+    private String ubicacion, origen, destino;
     private Address address;
     private Marker markerUbicacion;
     private MediaPlayer mediaPlayer;
@@ -62,9 +63,10 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         geocoder = new Geocoder(MapsActivity.this);
 
         Bundle bundle = getIntent().getExtras();
-        if (bundle != null)
-            ubicacion = bundle.getString("UBICACION");
 
+        ubicacion = bundle.getString("UBICACION");
+        origen = bundle.getString("ORIGEN");
+        destino = bundle.getString("DESTINO");
     }
 
 
@@ -115,9 +117,37 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setTrafficEnabled(true);
 
-        setUbicacion(googleMap);
+        if (ubicacion != null) setUbicacion(googleMap);
+        else setRuta(googleMap);
+
     }
 
+    private void setRuta(GoogleMap googleMap) {
+        mMap = googleMap;
+        List<Address> addresses1;
+        List<Address> addresses2;
+        try {
+            addresses1 = geocoder.getFromLocationName(origen, 1);
+            //addresses.add((Address) geocoder.getFromLocationName(origen, 1));
+            addresses2 = geocoder.getFromLocationName(destino, 1);
+
+            if (addresses1.size() > 0 && addresses2.size() > 0) {
+                Address direccionOrigen = addresses1.get(0);
+                Address direccionDestino = addresses2.get(0);
+
+                LatLng coordOrigen = new LatLng(direccionOrigen.getLatitude(), direccionOrigen.getLongitude());
+                LatLng coordDestino = new LatLng(direccionDestino.getLatitude(), direccionDestino.getLongitude());
+
+                List<LatLng> latLngs = new ArrayList<>();
+
+                mMap.addMarker(new MarkerOptions().position(coordOrigen).title(direccionOrigen.getLocality()));
+                mMap.addMarker(new MarkerOptions().position(coordDestino).title(direccionDestino.getLocality()));
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void setUbicacion(GoogleMap googleMap) {
         mMap = googleMap;
@@ -240,19 +270,23 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-        if (mediaPlayer != null)
+        if (mediaPlayer != null) {
             mediaPlayer.stop();
+            mediaPlayer = null;
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mediaPlayer != null)
+        if (mediaPlayer != null) {
             mediaPlayer.stop();
+            mediaPlayer = null;
+        }
     }
 
     private void enviarURL() {
-        String url = null;
+        String url;
         if (address.getLocality() == null) {
             url = String.format("https://es.wikipedia.org/wiki/%s", address.getCountryName());
         } else {
