@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 
@@ -25,6 +26,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -32,25 +38,32 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.material.snackbar.Snackbar;
 
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
-public class MapsActivity extends AppCompatActivity implements View.OnClickListener, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+public class MapsActivity extends AppCompatActivity implements View.OnClickListener,
+        OnMapReadyCallback, GoogleMap.OnMarkerClickListener, RoutingListener {
 
     private Toolbar toolbar;
     private final int REQUEST_CODE_ASK_PERMISSION = 111;
     private GoogleMap mMap;
     private Geocoder geocoder;
     private String ubicacion, origen, destino;
-    private Address address;
+    private Address direccionUbicacion, direccionOrigen, direccionDestino;
     private Marker markerUbicacion;
     private MediaPlayer mediaPlayer;
+    //polyline object
+    private List<Polyline> polylines = null;
+    private LatLng coordOrigen = null;
+    private LatLng coordDestino = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +86,9 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         ubicacion = bundle.getString("UBICACION");
         origen = bundle.getString("ORIGEN");
         destino = bundle.getString("DESTINO");
+
+        Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
+
     }
 
 
@@ -121,7 +137,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         }
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        mMap.setTrafficEnabled(true);
+        //mMap.setTrafficEnabled(true);
 
         if (ubicacion != null)
             setUbicacion(googleMap);
@@ -130,25 +146,13 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void setRuta(GoogleMap googleMap) {
-        mMap = googleMap;
-        try {
-            List<Address> addresses1 = geocoder.getFromLocationName(origen, 1);
-            //addresses.add((Address) geocoder.getFromLocationName(origen, 1));
-            List<Address> addresses2 = geocoder.getFromLocationName(destino, 1);
-
-            if (addresses1.size() > 0 && addresses2.size() > 0) {
-                Address direccionOrigen = addresses1.get(0);
-                Address direccionDestino = addresses2.get(0);
-
-                LatLng coordOrigen = new LatLng(direccionOrigen.getLatitude(), direccionOrigen.getLongitude());
-                LatLng coordDestino = new LatLng(direccionDestino.getLatitude(), direccionDestino.getLongitude());
-
-                mMap.addMarker(new MarkerOptions().position(coordOrigen).title(direccionOrigen.getLocality()));
-                mMap.addMarker(new MarkerOptions().position(coordDestino).title(direccionDestino.getLocality()));
+    private void solicitarPermisos() {
+        int permissionAccessCoarseLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        int permissionAccessFineLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION);
+        if (permissionAccessCoarseLocation != PackageManager.PERMISSION_GRANTED || permissionAccessFineLocation != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSION);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -157,18 +161,18 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         try {
             List<Address> addresses = geocoder.getFromLocationName(ubicacion, 1);
             if (addresses.size() > 0) {
-                address = addresses.get(0);
-                LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                direccionUbicacion = addresses.get(0);
+                LatLng latLng = new LatLng(direccionUbicacion.getLatitude(), direccionUbicacion.getLongitude());
 
-                guardarUbicacion(address);
+                guardarUbicacion(direccionUbicacion);
 
                 markerUbicacion = googleMap.addMarker(new MarkerOptions()
                         .position(latLng));
 
-                if (address.getLocality() == null)
-                    markerUbicacion.setTitle(address.getCountryName());
+                if (direccionUbicacion.getLocality() == null)
+                    markerUbicacion.setTitle(direccionUbicacion.getCountryName());
 
-                else markerUbicacion.setTitle(address.getLocality());
+                else markerUbicacion.setTitle(direccionUbicacion.getLocality());
 
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
 
@@ -198,7 +202,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         if (marker.equals(markerUbicacion)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder
-                    .setTitle("Conoce " + address.getCountryName())
+                    .setTitle("Conoce " + direccionUbicacion.getCountryName())
                     .setMessage("Si quieres saber mas sobre esta ubicación has clic en informacion")
                     .setNeutralButton(getString(R.string.information), new DialogInterface.OnClickListener() {
                         @Override
@@ -240,7 +244,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void seleccionarAudio() {
-        switch (address.getCountryCode()) {
+        switch (direccionUbicacion.getCountryCode()) {
             case "ES":
                 mediaPlayer = MediaPlayer.create(this, R.raw.spain);
                 break;
@@ -306,25 +310,99 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
 
     private void enviarURL() {
         String url;
-        if (address.getLocality() == null) {
-            url = String.format("https://es.wikipedia.org/wiki/%s", address.getCountryName());
+        if (direccionUbicacion.getLocality() == null) {
+            url = String.format("https://es.wikipedia.org/wiki/%s", direccionUbicacion.getCountryName());
         } else {
-            url = String.format("https://es.wikipedia.org/wiki/%s", address.getLocality());
+            url = String.format("https://es.wikipedia.org/wiki/%s", direccionUbicacion.getLocality());
         }
         Intent intent = new Intent(MapsActivity.this, WebActivity.class);
         intent.putExtra("URL", url);
         startActivity(intent);
     }
 
-    private void solicitarPermisos() {
-        int permissionAccessCoarseLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int permissionAccessFineLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION);
-        if (permissionAccessCoarseLocation != PackageManager.PERMISSION_GRANTED || permissionAccessFineLocation != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSION);
+    private void setRuta(GoogleMap googleMap) {
+        mMap = googleMap;
+        try {
+            List<Address> addresses1 = geocoder.getFromLocationName(origen, 1);
+
+            List<Address> addresses2 = geocoder.getFromLocationName(destino, 1);
+
+            if (addresses1.size() > 0 && addresses2.size() > 0) {
+                direccionOrigen = addresses1.get(0);
+                direccionDestino = addresses2.get(0);
+
+                coordOrigen = new LatLng(direccionOrigen.getLatitude(), direccionOrigen.getLongitude());
+                coordDestino = new LatLng(direccionDestino.getLatitude(), direccionDestino.getLongitude());
+
+                findRoutes(coordOrigen, coordDestino);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
+    // function to find Routes.
+    public void findRoutes(LatLng Start, LatLng End) {
+        if (Start == null || End == null) {
+            Toast.makeText(MapsActivity.this, "No se ha podido obtener la ubicacion", Toast.LENGTH_LONG).show();
+        } else {
+            Routing routing = new Routing.Builder()
+                    .travelMode(AbstractRouting.TravelMode.DRIVING)
+                    .withListener(this)
+                    .alternativeRoutes(true)
+                    .waypoints(Start, End)
+                    .key(getString(R.string.google_maps_key))  //also define your api key here.
+                    .build();
+            routing.execute();
+        }
+    }
 
+    //Routing call back functions.
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        View parentLayout = findViewById(android.R.id.content);
+        Snackbar snackbar = Snackbar.make(parentLayout, e.toString(), Snackbar.LENGTH_LONG);
+        snackbar.show();
+        Toast.makeText(MapsActivity.this, "No se ha encontrado ninguna ruta...", Toast.LENGTH_LONG).show();
+//       Findroutes(start,end);
+    }
+
+    @Override
+    public void onRoutingStart() {
+        Toast.makeText(MapsActivity.this, "Buscando ruta...", Toast.LENGTH_LONG).show();
+    }
+
+    //If Route finding success..
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordOrigen, 7));
+
+        if (polylines != null) {
+            polylines.clear();
+        }
+        PolylineOptions polyOptions = new PolylineOptions();
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map using polyline
+        for (int i = 0; i < route.size(); i++) {
+
+            if (i == shortestRouteIndex) {
+                polyOptions.color(Color.BLUE);
+                polyOptions.width(7);
+                polyOptions.addAll(route.get(shortestRouteIndex).getPoints());
+                Polyline polyline = mMap.addPolyline(polyOptions);
+                polylines.add(polyline);
+            }
+        }
+        mMap.addMarker(new MarkerOptions().position(coordOrigen).title(direccionOrigen.getLocality()));
+        mMap.addMarker(new MarkerOptions().position(coordDestino).title(direccionDestino.getLocality()));
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+        findRoutes(coordOrigen, coordDestino);
+    }
 }
+
+
