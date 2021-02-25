@@ -53,7 +53,6 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         OnMapReadyCallback, GoogleMap.OnMarkerClickListener, RoutingListener {
 
     private Toolbar toolbar;
-    private final int REQUEST_CODE_ASK_PERMISSION = 111;
     private GoogleMap mMap;
     private Geocoder geocoder;
     private String ubicacion, origen, destino;
@@ -77,8 +76,8 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        solicitarPermisos();
 
+        Places.initialize(MapsActivity.this, "AIzaSyCxihh7Rm3D31REus2K6HMNEj3FOw_a5u8");
         geocoder = new Geocoder(MapsActivity.this);
 
         Bundle bundle = getIntent().getExtras();
@@ -86,8 +85,6 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         ubicacion = bundle.getString("UBICACION");
         origen = bundle.getString("ORIGEN");
         destino = bundle.getString("DESTINO");
-
-        Places.initialize(getApplicationContext(), getString(R.string.google_maps_key));
 
     }
 
@@ -144,16 +141,6 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
         else
             setRuta(googleMap);
 
-    }
-
-    private void solicitarPermisos() {
-        int permissionAccessCoarseLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int permissionAccessFineLocation = ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION);
-        if (permissionAccessCoarseLocation != PackageManager.PERMISSION_GRANTED || permissionAccessFineLocation != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSION);
-            }
-        }
     }
 
     private void setUbicacion(GoogleMap googleMap) {
