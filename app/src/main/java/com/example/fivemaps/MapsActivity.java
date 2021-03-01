@@ -77,7 +77,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Places.initialize(MapsActivity.this, "AIzaSyCxihh7Rm3D31REus2K6HMNEj3FOw_a5u8");
+        Places.initialize(MapsActivity.this, getResources().getString(R.string.google_maps_key));
         geocoder = new Geocoder(MapsActivity.this);
 
         Bundle bundle = getIntent().getExtras();
@@ -190,7 +190,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder
                     .setTitle("Conoce " + direccionUbicacion.getCountryName())
-                    .setMessage("Si quieres saber mas sobre esta ubicación has clic en informacion")
+                    .setMessage("Si quieres saber más sobre esta ubicación pulsa en información")
                     .setNeutralButton(getString(R.string.information), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

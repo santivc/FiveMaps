@@ -29,9 +29,6 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.container);
 
-        getSupportActionBar();
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setIcon(R.mipmap.ic_launcher);
 
         adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
@@ -53,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         });
         solicitarPermisos();
 
-        Places.initialize(MainActivity.this, "AIzaSyCxihh7Rm3D31REus2K6HMNEj3FOw_a5u8");
+        Places.initialize(MainActivity.this, getResources().getString(R.string.google_maps_key));
     }
 
     private void solicitarPermisos() {
