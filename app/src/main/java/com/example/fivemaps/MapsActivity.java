@@ -166,6 +166,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
                 mMap.setOnMarkerClickListener(this::onMarkerClick);
             }
         } catch (IOException e) {
+            Toast.makeText(MapsActivity.this, "No se ha podido conectar a la red", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
@@ -324,6 +325,7 @@ public class MapsActivity extends AppCompatActivity implements View.OnClickListe
                 findRoutes(coordOrigen, coordDestino);
             }
         } catch (IOException e) {
+            Toast.makeText(MapsActivity.this, "No se ha podido conectar a la red", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
